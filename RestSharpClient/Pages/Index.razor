@@ -1,0 +1,60 @@
+﻿@page "/"
+
+@if (data is not null)
+{
+    @foreach (var item in data)
+    {
+        <div class="row">
+            <div class="col-md-1">
+                <h2>@item.Id</h2>
+            </div>
+            <div class="col-md-5">
+                <h4>@item.Name</h4>
+                <h6>@item.Price $</h6>
+            </div>
+            <div class="col-md-6">
+                <button class="btn btn-warning" @onclick="@(e => RiseProductPrice(item))">Rise price by 10%</button>
+                <button class="btn btn-danger" @onclick="@(e => DeleteProduct(item))">Delete Product</button>
+            </div>
+        </div>
+    }
+    <button class="btn btn-primary" @onclick="AddProduct">Add Milka Chocolate</button>
+
+}
+@code {
+    private List<ProductModel> data;
+
+    protected override async Task OnInitializedAsync()
+    {
+        data = await ProductClientService.GetProducts();
+    }
+
+    private async Task AddProduct()
+    {
+        await ProductClientService.CreateProduct(
+            new ProductModel
+                {
+                    Id = data.Count + 1,
+                    Name = "Milka Chocolate",
+                    Price = 3.99
+                }
+        );
+
+        data = await ProductClientService.GetProducts();
+    }
+
+    private async Task RiseProductPrice(ProductModel product)
+    {
+        var price = product.Price + product.Price / 10;
+        product.Price = Math.Round(price, 2, MidpointRounding.AwayFromZero);
+        await ProductClientService.UpdateProduct(product.Id, product);
+
+        data = await ProductClientService.GetProducts();
+    }
+
+    private async Task DeleteProduct(ProductModel product)
+    {
+        await ProductClientService.DeleteProduct(product.Id);
+        data = await ProductClientService.GetProducts();
+    }
+}
